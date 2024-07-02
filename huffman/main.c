@@ -3,8 +3,7 @@
 #include <time.h>
 #include "huffman.h"
 
-int main(int argc, char *argv[])
-{
+int main() {
     // Variables para medir el tiempo
     clock_t start, end;
     double cpu_time_used;
@@ -22,28 +21,28 @@ int main(int argc, char *argv[])
     unsigned long int dWORD; /* Doble palabra usada durante la codificación */
     int nBits;               /* Número de bits usados de dWORD */
 
-    if(argc < 3)
-    {
-        printf("Usar:\n%s <fichero_entrada> <fichero_salida>\n", argv[0]);
-        return 1;
-    }
+    // Solicitar los nombres de los archivos de entrada y salida
+    char path[256]="C:/Users/Rulig/OneDrive/Escritorio/apps/progra/c, c++ con qt/huffman/comp.txt";
+    char output_file[256];
+
+
+    printf("Introduce el nombre del fichero de salida: ");
+    scanf("%255s", output_file);
 
     Lista = NULL;
     /* Fase 1: contar frecuencias */
-    fe = fopen(argv[1], "r");
-    if (fe == NULL)
-    {
+    fe = fopen(path, "r");  // Abrir el fichero de entrada
+    if (fe == NULL) {
         perror("Error al abrir el fichero de entrada");
         return 1;
     }
 
     start = clock(); // Iniciar medición de tiempo
-    while((c = fgetc(fe)) != EOF)
-    {
+    while((c = fgetc(fe)) != EOF) {
         Longitud++;       /* Actualiza la cuenta de la longitud del fichero */
         Cuenta(&Lista, c); /* Actualiza la lista de frecuencias */
     }
-    fclose(fe);
+    fclose(fe);  // Cerrar el fichero de entrada
     end = clock(); // Fin de medición de tiempo
     cpu_time_used = ((double) (end - start)) / CLOCKS_PER_SEC;
     printf("Tiempo para contar frecuencias: %f segundos\n", cpu_time_used);
@@ -82,9 +81,8 @@ int main(int argc, char *argv[])
     printf("Tiempo para crear la tabla de códigos: %f segundos\n", cpu_time_used);
 
     /* Crear fichero comprimido */
-    fs = fopen(argv[2], "wb");
-    if (fs == NULL)
-    {
+    fs = fopen(output_file, "wb");  // Abrir el fichero de salida
+    if (fs == NULL) {
         perror("Error al abrir el fichero de salida");
         return 1;
     }
@@ -95,8 +93,7 @@ int main(int argc, char *argv[])
     /* Cuenta el número de elementos de tabla */
     nElementos = 0;
     t = Tabla;
-    while(t)
-    {
+    while(t) {
         nElementos++;
         t = t->sig;
     }
@@ -104,8 +101,7 @@ int main(int argc, char *argv[])
     fwrite(&nElementos, sizeof(int), 1, fs);
     /* Escribir tabla en fichero */
     t = Tabla;
-    while(t)
-    {
+    while(t) {
         fwrite(&t->letra, sizeof(char), 1, fs);
         fwrite(&t->bits, sizeof(unsigned long int), 1, fs);
         fwrite(&t->nbits, sizeof(char), 1, fs);
@@ -113,21 +109,18 @@ int main(int argc, char *argv[])
     }
 
     /* Codificación del fichero de entrada */
-    fe = fopen(argv[1], "r");
-    if (fe == NULL)
-    {
+    fe = fopen(path, "r");  // Abrir nuevamente el fichero de entrada para la codificación
+    if (fe == NULL) {
         perror("Error al abrir el fichero de entrada");
         return 1;
     }
     dWORD = 0; /* Valor inicial. */
     nBits = 0; /* Ningún bit */
-    while((c = fgetc(fe)) != EOF)
-    {
+    while((c = fgetc(fe)) != EOF) {
         /* Busca c en tabla: */
         t = BuscaCaracter(Tabla, c);
         /* Si nBits + t->nbits > 32, sacar un byte */
-        while(nBits + t->nbits > 32)
-        {
+        while(nBits + t->nbits > 32) {
             c = dWORD >> (nBits-8);           /* Extrae los 8 bits de mayor peso */
             fwrite(&c, sizeof(char), 1, fs);  /* Y lo escribe en el fichero */
             nBits -= 8;                       /* Ya tenemos hueco para 8 bits más */
@@ -137,16 +130,15 @@ int main(int argc, char *argv[])
         nBits += t->nbits;  /* Actualizamos la cuenta de bits */
     }
     /* Extraer los cuatro bytes que quedan en dWORD */
-    while(nBits > 0)
-    {
+    while(nBits > 0) {
         if(nBits >= 8) c = dWORD >> (nBits-8);
         else c = dWORD << (8-nBits);
         fwrite(&c, sizeof(char), 1, fs);
         nBits -= 8;
     }
 
-    fclose(fe);  /* Cierra los ficheros */
-    fclose(fs);
+    fclose(fe);  // Cerrar el fichero de entrada
+    fclose(fs);  // Cerrar el fichero de salida
     end = clock(); // Fin de medición de tiempo
     cpu_time_used = ((double) (end - start)) / CLOCKS_PER_SEC;
     printf("Tiempo para codificar el fichero de entrada: %f segundos\n", cpu_time_used);
@@ -160,8 +152,7 @@ int main(int argc, char *argv[])
 
     /* Borrar Tabla */
     start = clock(); // Iniciar medición de tiempo
-    while(Tabla)
-    {
+    while(Tabla) {
         t = Tabla;
         Tabla = t->sig;
         free(t);
